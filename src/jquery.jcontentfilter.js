@@ -7,6 +7,7 @@
     "filterSelector": "",
     "contentSelector": "",
     "reset": "reset",
+    "animateSpeed": 500,
     "beforeFilter": null,
     "afterFilter": null
   };
@@ -24,9 +25,9 @@
       var $this = $(this);
 
       if ($.inArray($that.attr("class"), $this.attr("class").split(" ")) < 0 && $that.attr("class") !== $.jContentFilter.options.reset) {
-        $this.hide();
+        $this.hide($.jContentFilter.options.animateSpeed);
       } else {
-        $this.show();
+        $this.show($.jContentFilter.options.animateSpeed);
       }
     });
 
