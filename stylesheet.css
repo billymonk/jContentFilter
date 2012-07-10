@@ -1,0 +1,22 @@
+#content-container div {
+  width: 60px;
+  margin-bottom: 10px;
+}
+#content-container div.last {
+  margin-bottom: 0px;
+}
+#content-container .item-0 {
+  background: red;
+}
+#content-container .item-1 {
+  background: blue;
+}
+#content-container .item-2 {
+  background: green;
+}
+#content-container .item-3 {
+  background: yellow;
+}
+#content-container .item-4 {
+  background: orange;
+}
