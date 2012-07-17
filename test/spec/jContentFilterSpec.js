@@ -1,6 +1,6 @@
 /*global
   jasmine: true, beforeEach: true, loadFixtures: true, it: true, expect: true, Constants: true,
-  runs: true, waits: true, spyOn: true
+  runs: true, waits: true, spyOn: true, Window: true
 */
 
 describe("jquery.jcontentfilter", function() {
@@ -111,6 +111,128 @@ describe("jquery.jcontentfilter", function() {
       $(jQuery.fn.show.calls.concat(jQuery.fn.hide.calls)).each(function(index, element) {
         expect(element.args[0]).toEqual($.jContentFilter.options.animateSpeed);
       });
+    });
+  });
+
+  describe("beforeFilter and afterFilter callbacks", function() {
+    var beforeFilter = function() {
+      alert(this);
+    }, 
+    afterFilter = function() {
+      alert(this);
+    };
+
+    beforeEach(function() {
+      $.jContentFilter.filter({
+        "filterSelector": filterSelector,
+        "contentSelector": contentSelector,
+        "beforeFilter": beforeFilter,
+        "afterFilter": afterFilter
+      });
+    });
+
+    it("should call beforeFilter before the filter has been applied", function() {
+      // We want to make sure only our beforeFilter callback is run because the afterFilter
+      // callback also calls window.alert and could potentially confuse our results.
+      // For example if we wanted to check that our beforeFilter callback was only run once and
+      // we did expect(window.alert.callCount).toEqual(1) it would fail if we had our afterFilter
+      // callback set.
+      $.jContentFilter.options.afterFilter = null;
+
+      // Spy on window.alert because we expect it to be called if our beforeFilter callback is called.
+      spyOn(window, "alert");
+      // Spy on jQuery.fn.hide and jQuery.fn.show because we know that their being called is indicative
+      // of our filter running.
+      spyOn(jQuery.fn, "hide");
+      spyOn(jQuery.fn, "show");
+
+      // Let's set things in motion. Should filter out all items except those with the class item-0.
+      $filterSelectorItem0.click();
+
+      // Now let's check that our beforeFilter callback function ran before
+      // we started showing and hiding elements.
+      expect(window.alert).toHaveBeenCalledBefore(jQuery.fn.hide);
+      expect(window.alert).toHaveBeenCalledBefore(jQuery.fn.show);
+    });
+
+    it("should call afterFilter after the filter has been applied", function() {
+      // We want to make sure only our afterFilter callback is run because the beforeFilter
+      // callback also calls window.alert and could potentially confuse our results.
+      // For example if we also if our beforeFilter callback also ran then
+      // expect(window.alert).toHaveBeenCalledBefore(jQuery.fn.hide) and
+      // expect(window.alert).toHaveBeenCalledBefore(jQuery.fn.show) would be successful and we wouldn't
+      // know if the window.alert being referred to was from our beforeFilter callback or our afterFilter callback.
+      $.jContentFilter.options.beforeFilter = null;
+
+      // Spy on window.alert because we expect it to be called if our afterFilter callback is called.
+      spyOn(window, "alert");
+      // Spy on jQuery.fn.hide and jQuery.fn.show because we know that their being called is indicative
+      // of our filter running.
+      spyOn(jQuery.fn, "hide");
+      spyOn(jQuery.fn, "show");
+
+      // Let's set things in motion. Should filter out all items except those with the class item-0.
+      $filterSelectorItem0.click();
+
+      // Now let's check that our afterFilter callback function ran after
+      // we started showing and hiding elements. Note that this isn't a perfect test
+      // because it only gaurantees that one jQuery.fn.hide method call and one jQuery.fn.show
+      // method call was triggered before our afterFilter callback was called.
+      expect(jQuery.fn.hide).toHaveBeenCalledBefore(window.alert);
+      expect(jQuery.fn.show).toHaveBeenCalledBefore(window.alert);
+
+      // To make up for the incompleteness above let's make sure that our window.alert call is the last
+      // item in the spyCalls array and that it is the only window.alert call.
+      expect($(jasmine.getEnv().currentSpec.spyCalls).last()[0].object).toEqual(jasmine.any(Window));
+      expect(window.alert.callCount).toEqual(1);
+    });
+
+    it("should pass the clicked filter to the before filter", function() {
+      // We want to make sure only our beforeFilter callback is run because the
+      // afterFilter callback also calls window.alert and could potentially confuse
+      // our results.
+      $.jContentFilter.options.afterFilter = null;
+
+      // Spy on window.alert because we expect it to be called if our beforeFilter callback
+      // is called.
+      spyOn(window, "alert");
+
+      // Let's set things in motion. Should filter out all items except those with the class item-0.
+      $filterSelectorItem0.click();
+
+      // Since we call window.alert with 'this' as an argument let's check that its argument (we know
+      // it should be the first one since it is only called with one) is the 'this' that we want to call
+      // our beforeFilter callback with. 
+      //
+      // Let's check the tag and the className against $filterSelectorItem0's tag name and class name
+      // since it is $filterSelectorItem0 (not as a jQuery object, though) that is passed to the beforeFilter
+      // callback.
+      expect(window.alert.argsForCall[0][0].nodeName).toEqual($filterSelectorItem0[0].nodeName);
+      expect(window.alert.argsForCall[0][0].className).toEqual($filterSelectorItem0[0].className);
+    });
+
+    it("should pass the clicked filter to the after filter", function() {
+      // We want to make sure only our afterFilter callback is run because the
+      // berforeFilter callback also calls window.alert and could potentially confuse
+      // our results.
+      $.jContentFilter.options.beforeFilter = null;
+
+      // Spy on window.alert because we expect it to be called if our afterFilter callback
+      // is called.
+      spyOn(window, "alert");
+
+      // Let's set things in motion. Should filter out all items except those with the class item-0.
+      $filterSelectorItem0.click();
+
+      // Since we call window.alert with 'this' as an argument let's check that its argument (we know
+      // it should be the first one since it is only called with one) is the 'this' that we want to call
+      // our afterFilter callback with. 
+      //
+      // Let's check the tag and the className against $filterSelectorItem0's tag name and class name
+      // since it is $filterSelectorItem0 (not as a jQuery object, though) that is passed to the afterFilter
+      // callback.
+      expect(window.alert.argsForCall[0][0].nodeName).toEqual("A");
+      expect(window.alert.argsForCall[0][0].className).toEqual("item-0");
     });
   });
 });
