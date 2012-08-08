@@ -24,7 +24,7 @@
     $contentSelector.each(function(index) {
       var $this = $(this);
 
-      if ($.inArray($that.attr("class"), $this.attr("class").split(" ")) < 0 && $that.attr("class") !== $.jContentFilter.options.reset) {
+      if (!$this.hasClass($that.attr("class")) && !$that.hasClass($.jContentFilter.options.reset)) {
         $this.hide($.jContentFilter.options.animateSpeed);
       } else {
         $this.show($.jContentFilter.options.animateSpeed);
